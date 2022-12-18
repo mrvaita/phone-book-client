@@ -6,8 +6,11 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // statusCmd represents the status command
@@ -21,7 +24,33 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("status called")
+		SERVER := viper.GetString("server")
+		PORT := viper.GetString("port")
+
+		// create request
+		URL := "http://" + SERVER + ":" + PORT + "/status"
+
+		// Send request to server
+		data, err := http.Get(URL)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// Check HTTP Status Code
+		if data.StatusCode != http.StatusOK {
+			fmt.Println("Status code:", data.StatusCode)
+			return
+		}
+
+		// Read data
+		responseData, err := io.ReadAll(data.Body)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Print(string(responseData))
 	},
 }
 

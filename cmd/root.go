@@ -8,9 +8,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
-
-
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -42,6 +41,11 @@ func init() {
 	// will be global for your application.
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.phone-book-client.yaml)")
+	rootCmd.PersistentFlags().StringP("server", "S", "localhost", "Server")
+	rootCmd.PersistentFlags().StringP("port", "P", "1234", "Port number")
+
+	viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
+	viper.BindPFlag("port", rootCmd.PersistentFlags().Lookup("port"))
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
