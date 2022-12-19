@@ -1,13 +1,15 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // searchCmd represents the search command
@@ -21,7 +23,37 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("search called")
+		SERVER := viper.GetString("server")
+		PORT := viper.GetString("port")
+		number, _ := cmd.Flags().GetString("tel")
+		if number == "" {
+			fmt.Println("Number is empty!")
+			return
+		}
+
+		// create request
+		URL := "http://" + SERVER + ":" + PORT + "/search/" + number
+
+		// Send request to server
+		data, err := http.Get(URL)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// Check http status code
+		if data.StatusCode != http.StatusOK {
+			fmt.Println("Status code:", data.StatusCode)
+			return
+		}
+
+		// Read data
+		responseData, err := io.ReadAll(data.Body)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(string(responseData))
 	},
 }
 
@@ -37,4 +69,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// searchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	searchCmd.Flags().StringP("tel", "t", "", "Telephone number to search")
 }

@@ -1,13 +1,15 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // insertCmd represents the insert command
@@ -21,7 +23,50 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("insert called")
+		SERVER := viper.GetString("server")
+		PORT := viper.GetString("port")
+
+		number, _ := cmd.Flags().GetString("tel")
+		if number == "" {
+			fmt.Println("Number is empty!")
+			return
+		}
+
+		name, _ := cmd.Flags().GetString("name")
+		if name == "" {
+			fmt.Println("Name is empty!")
+			return
+		}
+
+		surname, _ := cmd.Flags().GetString("surname")
+		if surname == "" {
+			fmt.Println("Surname is empty!")
+			return
+		}
+
+		URL := "http://" + SERVER + ":" + PORT + "/insert/"
+		URL += "/" + name + "/" + surname + "/" + number
+
+		// Send request to server
+		data, err := http.Get(URL)
+		if err != nil {
+			fmt.Println("**", err)
+			return
+		}
+
+		// Check http status code
+		if data.StatusCode != http.StatusOK {
+			fmt.Println("Status code:", data.StatusCode)
+			return
+		}
+
+		// Read data
+		responseData, err := io.ReadAll(data.Body)
+		if err != nil {
+			fmt.Println("*", err)
+			return
+		}
+		fmt.Println(string(responseData))
 	},
 }
 
@@ -37,4 +82,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// insertCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	insertCmd.Flags().StringP("name", "n", "", "Name value")
+	insertCmd.Flags().StringP("surname", "s", "", "Surname value")
+	insertCmd.Flags().StringP("tel", "t", "", "Telephone value")
 }
